@@ -9,7 +9,38 @@ var emotions = require('./emotions');
 var apn = require('./apn');
 var _ = require('underscore');
 
-var userEmotions = [];
+var userEmotions = [
+	{
+		adId: 101,
+		user: 'don',
+		emotion: 'wow',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'john',
+		emotion: 'wow',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'bob',
+		emotion: 'wow',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'jill',
+		emotion: 'wow',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 202,
+		user: 'bob',
+		emotion: 'haha',
+		createdAt: (new Date()).toString(),
+	}
+];
 var userSkips = [];
 var userTweets = [];
 var userPlays = [];
