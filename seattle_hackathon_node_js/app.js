@@ -179,9 +179,15 @@ app.post('/notifications', function(req, res) {
 		return
 	}
 	if (req.body.action.toLowerCase() == 'skip') {
-		// TODO: check if the coins is > 0
+		for (var user in userCoins) {
+			if (userCoins.hasOwnProperty(user) && userCoins[user] > 0) {
+				apn.sendMessage(req.body.action);
+				break;
+			}
+		}
+	} else {
+		apn.sendMessage(req.body.action);
 	}
-	apn.sendMessage(req.body.action);
 });
 
 console.log('app starting on ' + 5000);
