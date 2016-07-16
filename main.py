@@ -57,8 +57,8 @@ def get_skips(ws):
 		ws.send(json.dumps(skips_q.get()))
 
 @app.route("/notifications", methods=["POST"])
-def notificaitons():
-	if 'action' not request.json:
+def notificiations():
+	if 'action' not in request.json:
 		return make_response(jsonify({
 			'status': 'invalid',
 			'message': 'request send without an action',
