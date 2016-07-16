@@ -1,17 +1,21 @@
+
 ;(function($, _, io) {
+	'use strict';
+
 	var tabContentTemplate = _.template([
-		'<div role="tabpanel" class="tab-pane">',
-		'	<div class="col-md-6">',
-		'		<img src="http://placehold.it/640x480">',
+		'<div role="tabpanel" class="tab-pane" id="<%= adId %>">',
+		'	<div class="col-md-9">',
+		'		<div class="graph"></div>',
 		'	</div>',
-		'	<div class="col-md-3">',
+		'	<div class="col-md-3 side-pane">',
 		'		<div>',
-		'			<h4>Number of Tweets</h4>',
-		'			<p class="tweets"><%= tweets %></p>',
+		'			<p class="plays"><strong>Plays:</strong> <%= plays %></p>',
 		'		</div>',
 		'		<div>',
-		'			<h4>Number of Skips</h4>',
-		'			<p class="ad-skips"><%= skips %></p>',
+		'			<p class="skips"><strong>Skips:</strong> <%= skips %></p>',
+		'		</div>',
+		'		<div>',
+		'			<p class="tweets"><strong>Tweets:</strong> <%= tweets %></p>',
 		'		</div>',
 		'	</div>',
 		'</div>',
@@ -22,24 +26,48 @@
 		method: 'GET',
 		url: '/ads',
 		success: function(response) {
-			if (response.adIds.length > 0) {
-				var activeTab = $(tabTemplate({ adId: response.adIds[0] })).addClass('active');
-				var activeTabPane = $(tabContentTemplate({ adId: response.adIds[0], tweets: 0, skips: 0 })).addClass('active');
-				$('.nav-pills').append(activeTab);
-				$('.tab-content').append(activeTabPane);
-			}
-			$.each(response.adIds.slice(1), function(index, adId) {
-				$('.nav-pills').append(tabTemplate({ adId: adId }));
-				$('.tab-content').append(tabContentTemplate({ adId: adId, tweets: 0, skips: 0 }));
+			var adIds = response.adIds;
+			$.each(adIds, function(index, adId) {
+				$.ajax({
+					method: 'GET',
+					url: '/ad/' + adId + '/metrics',
+					success: function(metrics) {
+						var tab = $(tabTemplate({ adId: adId }));
+						var tabPane = $(tabContentTemplate({ adId: adId, tweets: metrics.actions.tweets, skips: metrics.actions.skips, plays: metrics.actions.plays }));
+						$('.nav-pills').append(tab);
+						$('.tab-content').append(tabPane);
+						if (index == 0) {
+							tab.addClass('active');
+							tabPane.addClass('active');
+						}
+
+						var series = [];
+						for (var emotion in metrics.emotionMetrics) {
+							if (metrics.emotionMetrics.hasOwnProperty(emotion)) {
+								series.push({
+									name: emotion,
+									data: [metrics.emotionMetrics[emotion]],
+								});
+							}
+						}
+
+						$(tabPane).find('.graph').highcharts({
+							chart: { type: 'column' },
+							title: { text: 'Emotion Metrics' },
+							xAxis: { categories: _.keys(metrics.emotionMetrics), title: 'Emotions' },
+							yAxis: { min: 0 },
+							series: series
+						});
+					}
+				});
 			});
 
-			$('.nav-pills a').tab('show');
+			$(document).on('click', '.nav-pills a', function(event) {
+				event.preventDefault();
+				$(this).tab('show');
+			});
 		}
 	});
-	$.ajax({
-
-	})
-
 
 	var adSkipsSocket = io('http://localhost:5000/ad_skips');
 	adSkipsSocket.on('message', function(data) {

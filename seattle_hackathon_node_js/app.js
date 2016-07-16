@@ -13,7 +13,7 @@ var userEmotions = [
 	{
 		adId: 101,
 		user: 'don',
-		emotion: 'wow',
+		emotion: 'haha',
 		createdAt: (new Date()).toString(),
 	},
 	{
@@ -35,29 +35,133 @@ var userEmotions = [
 		createdAt: (new Date()).toString(),
 	},
 	{
+		adId: 101,
+		user: 'jill',
+		emotion: 'sad',
+		createdAt: (new Date()).toString(),
+	},
+	{
 		adId: 202,
 		user: 'bob',
 		emotion: 'haha',
 		createdAt: (new Date()).toString(),
-	}
+	},
+	{
+		adId: 202,
+		user: 'sean',
+		emotion: 'angry',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 202,
+		user: 'harry',
+		emotion: 'sad',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 202,
+		user: 'barry',
+		emotion: 'sad',
+		createdAt: (new Date()).toString(),
+	},
 ];
-var userSkips = [];
-var userTweets = [];
-var userPlays = [];
+var userSkips = [
+	{
+		adId: 101,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'jill',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 202,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+];
+var userTweets = [
+	{
+		adId: 101,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'jill',
+		createdAt: (new Date()).toString(),
+	},
+];
+var userPlays = [
+	{
+		adId: 101,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'jill',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'don',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'john',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'jill',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 202,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 101,
+		user: 'jill',
+		createdAt: (new Date()).toString(),
+	},
+	{
+		adId: 202,
+		user: 'bob',
+		createdAt: (new Date()).toString(),
+	},
+];
 var userCoins = {};
 
 var calculateActions = function(adId) {
-	var skips = _.filter(userSkips, function(val) { return val.adId == adId; }).length
-	var plays = _.filter(userPlays, function(val) { return val.adId == adId; }).length
+	var skips = _.filter(userSkips, function(val) { return val.adId == adId; }).length;
+	var plays = _.filter(userPlays, function(val) { return val.adId == adId; }).length;
+	var tweets = _.filter(userTweets, function(val) { return val.adId == adId; }).length;
 	return {
 		skips: skips,
 		plays: plays,
+		tweets: tweets,
 	};
 };
 
 var calculateEmotionMetrics = function(adId) {
 	return _.chain(userEmotions).
-		filter(function(val) { return val.adId = adId; }).
+		filter(function(val) { return val.adId == adId; }).
 		reduce(function(memo, val) {
 			if (!memo[val.emotion]) {
 				memo[val.emotion] = 0;
@@ -77,8 +181,7 @@ app.use(bodyParser.json());
 
 app.get('/ads', function(req, res) {
 	res.status(200).json({
-		// adIds: _.chain(userPlays).map(function(val) { return val.adId; }).uniq().value(),
-		adIds: _.chain(userEmotions).map(function(val) { return val.adId; }).uniq().value(),
+		adIds: _.chain(userPlays).map(function(val) { return val.adId; }).uniq().value(),
 	});
 });
 app.get('/ad/:adId/metrics', function(req, res) {
