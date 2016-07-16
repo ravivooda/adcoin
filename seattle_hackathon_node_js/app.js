@@ -148,6 +148,32 @@ var userPlays = [
 ];
 var userCoins = {};
 
+var actionsTotal = function() {
+	var skips = userSkips.length;
+	var tweets = userTweets.length;
+
+	return {
+		skips: skips,
+		tweets: tweets,
+	};
+};
+
+var emotionMetricsTotal = function() {
+	var emotionMetrics = _(userEmotions).reduce(function(memo, val) {
+		if (!memo[val.emotion]) {
+			memo[val.emotion] = 0;
+		}
+		memo[val.emotion]++;
+		return memo;
+	}, {})
+	for (var emotion in emotions.values) {
+		if (emotions.values.hasOwnProperty(emotion) && !emotionMetrics[emotion]) {
+			emotionMetrics[emotion] = 0;
+		}
+	}
+	return emotionMetrics;
+};
+
 var calculateActions = function(adId) {
 	var skips = _.filter(userSkips, function(val) { return val.adId == adId; }).length;
 	var plays = _.filter(userPlays, function(val) { return val.adId == adId; }).length;
@@ -193,15 +219,12 @@ var adTweets = io.of('/ad_tweets').on('connection', function(socket) {
 app.use('/', express.static('static'));
 app.use(bodyParser.json());
 
-app.get('/ads', function(req, res) {
+app.get('/ad/metrics', function(req, res) {
+	console.log('actions total', actionsTotal());
+	console.log('emotion metrics total', emotionMetricsTotal());
 	res.status(200).json({
-		adIds: _.chain(userPlays).map(function(val) { return val.adId; }).uniq().value(),
-	});
-});
-app.get('/ad/:adId/metrics', function(req, res) {
-	res.status(200).json({
-		actions: calculateActions(req.params.adId),
-		emotionMetrics: calculateEmotionMetrics(req.params.adId),
+		actions: actionsTotal(),
+		emotionMetrics: emotionMetricsTotal(),
 	});
 });
 
@@ -231,7 +254,7 @@ app.post('/user/:user/tweet', function(req, res) {
 		adId: req.body.ad_id,
 		user: req.params.user,
 	});
-	adTweets.emit('message', calculateActions(req.body.ad_id));
+	adTweets.emit('message', actionsTotal());
 	res.status(200).json({
 		status: 'success',
 		user: req.params.user,
@@ -281,7 +304,7 @@ app.post('/ad/:adId/emotion', function(req, res) {
 		userCoins[req.body.user] = 0;
 	}
 	userCoins[req.body.user] += 2;
-	adEmotions.emit('message', calculateEmotionMetrics(req.params.adId));
+	adEmotions.emit('message', emotionMetricsTotal());
 
 	res.status(201).json({
 		status: 'success',
@@ -315,7 +338,7 @@ app.put('/ad/:adId', function(req, res) {
 	});
 	userCoins[req.body.user]--;
 
-	adSkips.emit('message', calculateActions(req.params.adId));
+	adSkips.emit('message', actionsTotal());
 
 	res.status(200).json({
 		status: 'success',
