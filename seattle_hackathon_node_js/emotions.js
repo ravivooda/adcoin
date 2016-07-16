@@ -1,6 +1,6 @@
 'use strict'; 
 
-var emotions = {
+var values = {
 	angry: 'angry',
 	haha: 'haha',
 	love: 'love',
@@ -9,15 +9,16 @@ var emotions = {
 };
 
 var valid = function(emotion) {
-	return typeof emotions[emotion.toLowerCase()] != 'undefined';
+	return typeof values[emotion.toLowerCase()] != 'undefined';
 };
 
 var extract = function(emotion) {
 	if (!valid(emotion)) {
 		throw Exception('invalid emotion');
 	}
-	return emotions[emotion.toLowerCase()];
+	return values[emotion.toLowerCase()];
 };
 
 exports.valid = valid;
 exports.extract = extract;
+exports.values = values;
