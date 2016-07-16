@@ -16,15 +16,8 @@ var userPlays = [];
 var userCoins = {};
 
 var calculateActions = function(adId) {
-	var skips = _.chain(userSkips).
-		filter(function(val) { return val.adId == adId; }).
-		reduce(function(memo, val) { return memo + val }, 0).
-	value();
-	var plays = _.chain(userPlays).
-		filter(function(val) { return val.adId == adId; }).
-		reduce(function(memo, val) { return memo + val }, 0).
-	value();
-
+	var skips = _.filter(userSkips, function(val) { return val.adId == adId; }).length
+	var plays = _.filter(userPlays, function(val) { return val.adId == adId; }).length
 	return {
 		skips: skips,
 		plays: plays,
@@ -151,9 +144,6 @@ app.put('/ad/:adId', function(req, res) {
 		return
 	}
 
-	if (!userSkips[req.body.user]) {
-		userSkips[req.body.user] = { skips: [] };
-	}
 	userSkips.push({
 		user: req.body.user,
 		adId: req.params.adId,
@@ -161,7 +151,7 @@ app.put('/ad/:adId', function(req, res) {
 	});
 	userCoins[req.body.user]--;
 
-	adSkips.emit('message', calculateActions(adId));
+	adSkips.emit('message', calculateActions(req.params.adId));
 
 	res.status(200).json({
 		status: 'success',
