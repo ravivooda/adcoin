@@ -7,7 +7,7 @@ var options = { cert: 'pushcert.pem', key: 'pushcert.pem', production: false };
 var apnConnection = new apn.Connection(options);
 
 var sendMessage = function(message) {
-	var notification = apn.Notification();
+	var notification = new apn.Notification();
 	notification.alert = message;
 	notification.sound = 'default';
 	notification.badge = 0;
