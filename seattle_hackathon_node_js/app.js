@@ -216,11 +216,22 @@ app.post('/user/:user/tweet', function(req, res) {
 	if (!userCoins[req.params.user]) {
 		userCoins[req.params.user] = 0;
 	}
+	var tweeted = _.any(userTweets, function(tweet) {
+		return tweet.adId == req.body.adId && tweet.user == req.params.user;
+	});
+	if (tweeted) {
+		res.status(422).json({
+			status: 'invalid',
+			message: 'ad already retweeted',
+		});
+		return
+	}
 	userCoins[req.params.user] += 10;
 	userTweets.push({
 		adId: req.body.ad_id,
 		user: req.params.user,
 	});
+	adTweets.emit('message', calculateActions(req.body.ad_id));
 	res.status(200).json({
 		status: 'success',
 		user: req.params.user,

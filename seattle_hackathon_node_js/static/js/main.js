@@ -78,6 +78,7 @@
 
 	var adSkipsSocket = io('http://localhost:5000/ad_skips');
 	var adEmotions = io('http://localhost:5000/ad_emotions');
+	var adTweets = io('http://localhost:5000/ad_tweets');
 	adSkipsSocket.on('message', function(data) {
 		$('#' + data.adId + ' .skips .value').text(data.skips);
 	});
@@ -94,5 +95,8 @@
 				series.setData([data[emotion]], true);
 			}
 		});
+	});
+	adTweets.on('message', function(data) {
+		$('#' + data.adId + ' .tweets .value').text(data.tweets);
 	});
 })(jQuery, _, io, Highcharts);
