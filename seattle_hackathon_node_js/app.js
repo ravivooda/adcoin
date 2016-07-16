@@ -54,21 +54,21 @@ app.get('/user/:user', function(req, res) {
 });
 
 app.post('/ad/:adId/emotion', function(req, res) {
-	if (!req.params.user) {
+	if (!req.body.user) {
 		res.status(400).json({
 			status: 'invalid',
 			message: 'request sent without an user',
 		});
 		return
 	}
-	if (!req.params.emotion) {
+	if (!req.body.emotion) {
 		res.status(400).json({
 			status: 'invalid',
 			message: 'request sent withot an emotion',
 		});
 		return
 	}
-	if (!emotion.valid(req.params.emotion)) {
+	if (!emotions.valid(req.body.emotion)) {
 		res.status(400).json({
 			status: 'invalid',
 			message: 'request send an invalid emotion',
@@ -79,9 +79,9 @@ app.post('/ad/:adId/emotion', function(req, res) {
 		userEmotions[req.body.user] = { emotions: [] };
 	}
 
-	userEmotions[req.body.user].push({
+	userEmotions[req.body.user].emotions.push({
 		adId: req.params.adId,
-		emotion: emotions.extract(emotion),
+		emotion: emotions.extract(req.body.emotion),
 		createdAt: (new Date()).toString(),
 	});
 	if (!userCoins[req.body.user]) {
@@ -117,7 +117,7 @@ app.put('/ad/:adId', function(req, res) {
 	if (!userSkips[req.body.user]) {
 		userSkips[req.body.user] = { skips: [] };
 	}
-	userSkips[req.body.user].push({
+	userSkips[req.body.user].skips.push({
 		adId: req.params.adId,
 		createdAt: (new Date()).toString(),
 	});
@@ -125,11 +125,10 @@ app.put('/ad/:adId', function(req, res) {
 
 	// TODO: publish to websockets about emotion changes
 	// ...
-
 	res.status(200).json({
 		status: 'success',
 		user: req.body.user,
-		coins: userCoins[req.body.user],
+		coins: userCoins[req.body.user] ? userCoins[req.body.user] : 0,
 	});
 });
 

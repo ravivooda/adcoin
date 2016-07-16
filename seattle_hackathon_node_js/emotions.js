@@ -9,7 +9,7 @@ var emotions = {
 };
 
 var valid = function(emotion) {
-	return !emotions[emotion.toLowerCase()];
+	return typeof emotions[emotion.toLowerCase()] != 'undefined';
 };
 
 var extract = function(emotion) {
