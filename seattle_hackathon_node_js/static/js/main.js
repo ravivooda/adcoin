@@ -87,10 +87,12 @@
 		});
 
 		_.each(data, function(value, emotion) {
-			var series = _.find(chart.series, function(series) {
-				return series.name == emotion;
-			});
-			series.setData([data[emotion]], true);
+			if (emotion != 'adId') {
+				var series = _.find(chart.series, function(series) {
+					return series.name == emotion;
+				});
+				series.setData([data[emotion]], true);
+			}
 		});
 	});
 })(jQuery, _, io, Highcharts);
