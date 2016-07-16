@@ -153,6 +153,7 @@ var calculateActions = function(adId) {
 	var plays = _.filter(userPlays, function(val) { return val.adId == adId; }).length;
 	var tweets = _.filter(userTweets, function(val) { return val.adId == adId; }).length;
 	return {
+		adId: adId,
 		skips: skips,
 		plays: plays,
 		tweets: tweets,
@@ -160,7 +161,7 @@ var calculateActions = function(adId) {
 };
 
 var calculateEmotionMetrics = function(adId) {
-	return _.chain(userEmotions).
+	var emotionMetrics = _.chain(userEmotions).
 		filter(function(val) { return val.adId == adId; }).
 		reduce(function(memo, val) {
 			if (!memo[val.emotion]) {
@@ -170,10 +171,23 @@ var calculateEmotionMetrics = function(adId) {
 			return memo;
 		}, {}).
 	value();
+	emotionMetrics.adId = adId;
+	for (var emotion in emotions.values) {
+		if (emotions.values.hasOwnProperty(emotion) && !emotionMetrics[emotion]) {
+			emotionMetrics[emotion] = 0;
+		}
+	}
+	return emotionMetrics;
 };
 
 var adSkips = io.of('/ad_skips').on('connection', function(socket) {
 	console.log('a user has connected to /ad_skips');
+});
+var adEmotions = io.of('/ad_emotions').on('connection', function(socket) {
+	console.log('a user has connected to /ad_emotions');
+});
+var adTweets = io.of('/ad_tweets').on('connection', function(socket) {
+	console.log('a user has connected to /ad_tweets');
 });
 
 app.use('/', express.static('static'));
@@ -203,6 +217,10 @@ app.post('/user/:user/tweet', function(req, res) {
 		userCoins[req.params.user] = 0;
 	}
 	userCoins[req.params.user] += 10;
+	userTweets.push({
+		adId: req.body.ad_id,
+		user: req.params.user,
+	});
 	res.status(200).json({
 		status: 'success',
 		user: req.params.user,
@@ -252,6 +270,7 @@ app.post('/ad/:adId/emotion', function(req, res) {
 		userCoins[req.body.user] = 0;
 	}
 	userCoins[req.body.user] += 2;
+	adEmotions.emit('message', calculateEmotionMetrics(req.params.adId));
 
 	res.status(201).json({
 		status: 'success',
