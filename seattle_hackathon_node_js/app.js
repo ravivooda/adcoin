@@ -144,5 +144,5 @@ app.post('/notifications', function(req, res) {
 	apn.sendMessage(req.body.action);
 });
 
-console.log('app starting on ' + 5001);
-server.listen(5001);
+console.log('app starting on ' + 5000);
+server.listen(5000);
