@@ -3,20 +3,25 @@ from datetime import datetime
 import json
 
 from flask import Flask, Response, make_response, request, abort, jsonify, send_from_directory
-import gevent
-from gevent.pywsgi import WSGIServer
+from flask_sockets import Sockets
+
+from gevent import pywsgi
 from gevent.queue import Queue
+from geventwebsocket.handler import WebSocketHandler
 
 import emotions.enum
+import apn_push_notification as apn
 
 app = Flask(__name__)
+sockets = Sockets(app)
+
 emotions_q = Queue()
 skips_q = Queue()
 
 user_emotions = defaultdict(lambda: defaultdict(lambda: []))
 user_skips = defaultdict(lambda: defaultdict(lambda: []))
 user_tweets = defaultdict(lambda: defaultdict(lambda: []))
-user_coins = defaultdict(lambda: 0)
+user_coins = defaultdict(lambda: 20)
 
 api_endpoints = ['add_emotion', 'skip_ad']
 
@@ -41,27 +46,24 @@ def javascript(path):
 def bower_components(path):
 	return send_from_directory('static/bower_components', path)
 
-@app.route("/emotions")
-def get_emotions():
-	def gen():
-		try:
-			while not emotions_q.empty():
-				yield 'event: message\ndata: %s\n\n' % json.dumps(emotions_q.get())
-				gevent.sleep(0)
-		except GeneratorExit as err:
-			print("Generator Error: {0}".format(err))
-	return Response(gen(emotions_q), mimetype="text/event-stream")
+@sockets.route("/emotions")
+def get_emotions(ws):
+	while not emotions_q.empty():
+		ws.send(json.dumps(emotions_q.get()))
 
-@app.route("/skips")
-def get_skips():
-	def gen():
-		try:
-			while not skips_q.empty():
-				yield 'event: message\ndata: %s\n\n' % json.dumps(skips_q.get())
-				gevent.sleep(0)
-		except GeneratorExit as err:
-			print("Generator Error: {0}".format(err))
-	return Response(gen(), mimetype="text/event-stream")
+@sockets.route("/skips")
+def get_skips(ws):
+	while not ws.closed and not skips_q.empty():
+		ws.send(json.dumps(skips_q.get()))
+
+@app.route("/notifications", methods=["POST"])
+def notificaitons():
+	if 'action' not request.json:
+		return make_response(jsonify({
+			'status': 'invalid',
+			'message': 'request send without an action',
+		}), 200)
+	apn.send_message(request.json['action'])
 
 @app.route("/user/<user>/tweet", methods=["POST"])
 def tweet(user):
@@ -151,5 +153,5 @@ if __name__ == "__main__":
 	# TODO: set up the data with the data that is available for the ad in case validation logic is required in the future
 	# TODO: persist the data records to some source
 	app.debug = True
-	server = WSGIServer(("", 5000), app)
+	server = pywsgi.WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
 	server.serve_forever()
