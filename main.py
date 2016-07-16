@@ -46,16 +46,6 @@ def javascript(path):
 def bower_components(path):
 	return send_from_directory('static/bower_components', path)
 
-@sockets.route("/emotions")
-def get_emotions(ws):
-	while not emotions_q.empty():
-		ws.send(json.dumps(emotions_q.get()))
-
-@sockets.route("/skips")
-def get_skips(ws):
-	while not ws.closed and not skips_q.empty():
-		ws.send(json.dumps(skips_q.get()))
-
 @app.route("/notifications", methods=["POST"])
 def notificiations():
 	if 'action' not in request.json:
