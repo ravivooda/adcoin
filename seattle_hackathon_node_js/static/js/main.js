@@ -33,8 +33,6 @@
 				$('.tab-content').append(tabContentTemplate({ tweets: 0, skips: 0 }));
 			});
 
-			
-
 			$('.nav-pills a').tab('show');
 		}
 	});

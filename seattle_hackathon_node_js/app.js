@@ -45,7 +45,7 @@ var calculateEmotionMetrics = function(adId) {
 };
 
 var adSkips = io.of('/ad_skips').on('connection', function(socket) {
-	console.log('a user has connected to /metrics');
+	console.log('a user has connected to /ad_skips');
 });
 
 app.use('/', express.static('static'));
@@ -161,7 +161,7 @@ app.put('/ad/:adId', function(req, res) {
 	});
 	userCoins[req.body.user]--;
 
-	metrics.emit('message', calculateActions(adId));
+	adSkips.emit('message', calculateActions(adId));
 
 	res.status(200).json({
 		status: 'success',
