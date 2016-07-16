@@ -1,7 +1,8 @@
 
-;(function($, _, io) {
+;(function($, _, io, Highcharts) {
 	'use strict';
 
+	var charts = {};
 	var tabContentTemplate = _.template([
 		'<div role="tabpanel" class="tab-pane" id="<%= adId %>">',
 		'	<div class="col-md-9">',
@@ -9,13 +10,13 @@
 		'	</div>',
 		'	<div class="col-md-3 side-pane">',
 		'		<div>',
-		'			<p class="plays"><strong>Plays:</strong> <%= plays %></p>',
+		'			<p class="plays"><strong>Plays:</strong> <span class="value"><%= plays %></span></p>',
 		'		</div>',
 		'		<div>',
-		'			<p class="skips"><strong>Skips:</strong> <%= skips %></p>',
+		'			<p class="skips"><strong>Skips:</strong> <span class="value"><%= skips %></span></p>',
 		'		</div>',
 		'		<div>',
-		'			<p class="tweets"><strong>Tweets:</strong> <%= tweets %></p>',
+		'			<p class="tweets"><strong>Tweets:</strong> <span class="value"><%= tweets %></span></p>',
 		'		</div>',
 		'	</div>',
 		'</div>',
@@ -43,7 +44,7 @@
 
 						var series = [];
 						for (var emotion in metrics.emotionMetrics) {
-							if (metrics.emotionMetrics.hasOwnProperty(emotion)) {
+							if (metrics.emotionMetrics.hasOwnProperty(emotion) && emotion != 'adId') {
 								series.push({
 									name: emotion,
 									data: [metrics.emotionMetrics[emotion]],
@@ -51,13 +52,19 @@
 							}
 						}
 
-						$(tabPane).find('.graph').highcharts({
-							chart: { type: 'column' },
+						var options = {
+							chart: {
+								renderTo: $(tabPane).find('.graph')[0],
+								type: 'column',
+							},
 							title: { text: 'Emotion Metrics' },
-							xAxis: { categories: _.keys(metrics.emotionMetrics), title: 'Emotions' },
+							xAxis: { categories: ['Emotions'], title: 'Emotions' },
 							yAxis: { min: 0 },
 							series: series
-						});
+						};
+
+						charts[adId] = new Highcharts.Chart(options);
+						charts[adId].redraw();
 					}
 				});
 			});
@@ -70,8 +77,22 @@
 	});
 
 	var adSkipsSocket = io('http://localhost:5000/ad_skips');
+	var adEmotions = io('http://localhost:5000/ad_emotions');
 	adSkipsSocket.on('message', function(data) {
-		console.log(data);
-		$('.ad-skips').text(data.skips);
+		$('#' + data.adId + ' .skips .value').text(data.skips);
 	});
-})(jQuery, _, io);
+	adEmotions.on('message', function(data) {
+		var chart = _.find(charts, function(chart, adId) {
+			return adId == data.adId;
+		});
+
+		_.each(data, function(value, emotion) {
+			if (emotion != 'adId') {
+				var series = _.find(chart.series, function(series) {
+					return series.name == emotion;
+				});
+				series.setData([data[emotion]], true);
+			}
+		});
+	});
+})(jQuery, _, io, Highcharts);
